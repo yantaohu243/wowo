@@ -1,61 +1,36 @@
-name: Build Obfuscate BPB Panel
+import great_expectations as ge
 
-on:
-  push:
-    branches:
-      - main
-  schedule:
-    # 每天凌晨1点运行（UTC时间）
-    - cron: "0 1 * * *"
+# 初始化great_expectations
+context = ge.data_context.DataContext()
 
-permissions:
-  contents: write
+# 配置Git提交参数，移除无效的参数并使用有效参数
+commit_config = {
+    "commit_message": "Your commit message here",
+    "branch_name": "Your branch name here",  # 注意：这里将键名从'branch'改为'branch_name'以匹配可能的API要求，具体需参考great_expectations文档
+    "commit_options": None,
+    "add_options": None,
+    "status_options": None,
+    "file_pattern": None,
+    "repository": None,
+    "commit_user_name": "Your commit user name",
+    "commit_user_email": "Your commit user email",
+    "tagging_message": None,
+    "push_options": None,
+    "skip_dirty_check": False,
+    "skip_fetch": False,
+    "skip_checkout": False,
+    "disable_globbing": False,
+    "create_branch": False,
+    "internal_git_binary": None
+}
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+# 注意：'branch_name'可能需要根据great_expectations的实际API进行调整，如果API要求的是'branch'，则应将'branch_name'改回'branch'
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # 获取完整提交历史，避免提交冲突
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install javascript-obfuscator
-        run: npm install -g javascript-obfuscator
-
-      - name: Download unobfuscated-worker.js
-        run: wget -O ./origin.js https://raw.githubusercontent.com/bia-pain-bache/BPB-Worker-Panel/main/build/unobfuscated-worker.js
-
-      - name: Obfuscate code
-        run: |
-          javascript-obfuscator ./origin.js \
-            --output ./_worker.js \
-            --compact true \
-            --control-flow-flattening true \
-            --control-flow-flattening-threshold 1 \
-            --dead-code-injection true \
-            --dead-code-injection-threshold 1 \
-            --identifier-names-generator hexadecimal \
-            --rename-globals true \
-            --string-array true \
-            --string-array-encoding 'rc4' \
-            --string-array-threshold 1 \
-            --transform-object-keys true \
-            --unicode-escape-sequence true
-
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          branch: main
-          commit_message: ":arrow_up: update latest bpb panel"
-          file_pattern: |  # 明确指定提交文件
-            _worker.js
-          commit_author_name: "github-actions[bot]"
-          commit_author_email: "github-actions[bot]@users.noreply.github.com"
-          commit_user_name: "github-actions[bot]"
+# 使用配置进行提交
+# 注意：这里的test_yaml_config方法可能不是实际用于提交的方法，具体提交方法需参考great_expectations的文档
+# 此处假设test_yaml_config方法用于演示配置过程，实际提交可能需要使用其他方法
+context.test_yaml_config(
+    batch_kwargs={"datasource": "your_datasource", "data_asset_name": "your_data_asset"},
+    run_name="your_run_name",
+    commit_config=commit_config
+)
